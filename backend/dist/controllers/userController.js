@@ -26,10 +26,16 @@ const generateToken = (id) => {
 // @access  Public
 const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        console.log('Registration request received:', req.body);
         const { username, email, password } = req.body;
+        if (!username || !email || !password) {
+            console.log('Invalid registration data - missing fields');
+            return res.status(400).json({ message: 'Please provide username, email, and password' });
+        }
         // Check if user already exists
         const userExists = yield user_1.default.findOne({ $or: [{ email }, { username }] });
         if (userExists) {
+            console.log('User already exists:', { email, username });
             return res.status(400).json({ message: 'User already exists' });
         }
         // Create new user
@@ -39,15 +45,18 @@ const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             password,
         });
         if (user) {
-            res.status(201).json({
+            const userData = {
                 _id: user._id,
                 username: user.username,
                 email: user.email,
                 favorites: user.favorites,
                 token: generateToken(user._id.toString()),
-            });
+            };
+            console.log('User registered successfully:', { id: user._id, email: user.email });
+            res.status(201).json(userData);
         }
         else {
+            console.log('Failed to create user with data:', { username, email });
             res.status(400).json({ message: 'Invalid user data' });
         }
     }
@@ -62,24 +71,33 @@ exports.registerUser = registerUser;
 // @access  Public
 const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        console.log('Login request received:', req.body);
         const { email, password } = req.body;
+        if (!email || !password) {
+            console.log('Invalid login data - missing fields');
+            return res.status(400).json({ message: 'Please provide email and password' });
+        }
         // Check for user email
         const user = yield user_1.default.findOne({ email });
         if (!user) {
+            console.log('Login failed: User not found with email:', email);
             return res.status(401).json({ message: 'Invalid email or password' });
         }
         // Check if password matches
         const isMatch = yield user.comparePassword(password);
         if (!isMatch) {
+            console.log('Login failed: Invalid password for user:', email);
             return res.status(401).json({ message: 'Invalid email or password' });
         }
-        res.json({
+        const userData = {
             _id: user._id,
             username: user.username,
             email: user.email,
             favorites: user.favorites,
             token: generateToken(user._id.toString()),
-        });
+        };
+        console.log('User logged in successfully:', { id: user._id, email: user.email });
+        res.json(userData);
     }
     catch (error) {
         console.error('Error in loginUser:', error);

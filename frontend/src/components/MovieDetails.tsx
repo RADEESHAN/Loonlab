@@ -11,11 +11,13 @@ import {
   Grid,
   DialogActions,
   Button,
-  CircularProgress
+  CircularProgress,
+  Paper
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { Movie, Genre } from '../types/movie';
-import { getGenres } from '../services/movieService';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import { Movie, Genre, MovieVideo } from '../types/movie';
+import { getGenres, getMovieVideos } from '../services/movieService';
 
 interface MovieDetailsProps {
   movie: Movie | null;
@@ -25,25 +27,32 @@ interface MovieDetailsProps {
 
 const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, open, onClose }) => {
   const [genres, setGenres] = useState<Genre[]>([]);
+  const [videos, setVideos] = useState<MovieVideo[]>([]);
+  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchGenres = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const genreData = await getGenres();
+        const [genreData, videoData] = await Promise.all([
+          getGenres(),
+          movie ? getMovieVideos(movie.id) : Promise.resolve([])
+        ]);
         setGenres(genreData);
+        setVideos(videoData);
         setLoading(false);
       } catch (error) {
-        console.error('Failed to fetch genres:', error);
+        console.error('Failed to fetch movie data:', error);
         setLoading(false);
       }
     };
 
-    if (open) {
-      fetchGenres();
+    if (open && movie) {
+      fetchData();
+      setSelectedVideo(null);
     }
-  }, [open]);
+  }, [open, movie]);
 
   if (!movie) {
     return null;
@@ -120,8 +129,7 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, open, onClose }) => 
               <Typography variant="subtitle1" gutterBottom>
                 Released: {releaseDate}
               </Typography>
-              
-              <Box mb={2}>
+                <Box mb={2}>
                 {movieGenres.map((genre) => (
                   <Chip 
                     key={genre.id} 
@@ -135,6 +143,82 @@ const MovieDetails: React.FC<MovieDetailsProps> = ({ movie, open, onClose }) => 
               <Typography variant="body1" paragraph>
                 {movie.overview || 'No description available.'}
               </Typography>
+              
+              {/* Movie Trailer Section */}
+              {videos && videos.length > 0 && (
+                <Box mt={3}>
+                  <Typography variant="h6" gutterBottom>Trailer</Typography>
+                  {selectedVideo ? (
+                    <Box
+                      sx={{
+                        position: 'relative',
+                        paddingBottom: '56.25%', /* 16:9 aspect ratio */
+                        height: 0,
+                        overflow: 'hidden',
+                        maxWidth: '100%',
+                        mb: 2,
+                      }}
+                    >
+                      <iframe
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          height: '100%',
+                          borderRadius: '8px',
+                        }}
+                        src={`https://www.youtube.com/embed/${selectedVideo}`}
+                        title={`${movie.title} Trailer`}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </Box>
+                  ) : (
+                    <Box display="flex" flexWrap="wrap" gap={1}>
+                      {videos
+                        .filter(video => video.site === 'YouTube' && ['Trailer', 'Teaser'].includes(video.type))
+                        .slice(0, 3)
+                        .map(video => (
+                          <Button
+                            key={video.id}
+                            variant="outlined"
+                            color="secondary"
+                            startIcon={<PlayArrowIcon />}
+                            onClick={() => setSelectedVideo(video.key)}
+                          >
+                            {video.name.length > 20 ? `${video.name.substring(0, 20)}...` : video.name}
+                          </Button>
+                        ))}
+                    </Box>
+                  )}
+                </Box>
+              )}
+
+              {/* Trailer Section */}
+              {videos.length > 0 && (
+                <>
+                  <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>Trailer</Typography>
+                  {videos.filter(video => video.site === 'YouTube' && (video.type === 'Trailer' || video.type === 'Teaser'))[0] ? (
+                    <Box sx={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', maxWidth: '100%', mt: 2 }}>
+                      <iframe
+                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', borderRadius: '8px' }}
+                        src={`https://www.youtube.com/embed/${videos.filter(video => video.site === 'YouTube' && (video.type === 'Trailer' || video.type === 'Teaser'))[0].key}`}
+                        title={`${movie.title} trailer`}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </Box>
+                  ) : (
+                    <Box display="flex" alignItems="center" mt={2}>
+                      <PlayArrowIcon color="disabled" sx={{ mr: 1 }} />
+                      <Typography color="textSecondary">No trailer available</Typography>
+                    </Box>
+                  )}
+                </>
+              )}
             </Grid>
           </Grid>
         )}

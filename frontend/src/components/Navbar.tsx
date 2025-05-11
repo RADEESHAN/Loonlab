@@ -144,8 +144,7 @@ const Navbar: React.FC = () => {
             MOVIES
           </Typography>
 
-          {/* Desktop menu */}
-          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+          {/* Desktop menu */}          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
             <Button
               onClick={() => navigateTo('/')}
               sx={{ my: 2, color: 'white', display: 'block' }}
@@ -160,6 +159,12 @@ const Navbar: React.FC = () => {
                 Favorites
               </Button>
             )}
+            <Button
+              onClick={() => navigateTo('/admin')}
+              sx={{ my: 2, color: 'white', display: 'block' }}
+            >
+              Admin
+            </Button>
           </Box>
 
           {/* Theme toggle */}

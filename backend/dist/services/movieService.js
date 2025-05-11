@@ -20,10 +20,17 @@ const API_KEY = process.env.MOVIE_API_KEY;
 const BASE_URL = process.env.MOVIE_API_BASE_URL;
 const fetchPopularMovies = (...args_1) => __awaiter(void 0, [...args_1], void 0, function* (page = 1) {
     try {
+        if (!API_KEY || API_KEY === '3e12345678901234567890abcdefghij') {
+            throw new Error('Invalid or missing TMDb API key. Please get a valid API key from https://www.themoviedb.org/settings/api');
+        }
         const response = yield axios_1.default.get(`${BASE_URL}/movie/popular?api_key=${API_KEY}&page=${page}`);
         return response.data;
     }
     catch (error) {
+        if (error.response && error.response.status === 401) {
+            console.error('TMDb API unauthorized access. Your API key is invalid or expired.');
+            throw new Error('TMDb API key is invalid or expired. Please update your API key.');
+        }
         console.error('Error fetching popular movies:', error);
         throw new Error('Failed to fetch popular movies');
     }
@@ -31,10 +38,17 @@ const fetchPopularMovies = (...args_1) => __awaiter(void 0, [...args_1], void 0,
 exports.fetchPopularMovies = fetchPopularMovies;
 const searchMovies = (query_1, ...args_1) => __awaiter(void 0, [query_1, ...args_1], void 0, function* (query, page = 1) {
     try {
+        if (!API_KEY || API_KEY === '3e12345678901234567890abcdefghij') {
+            throw new Error('Invalid or missing TMDb API key. Please get a valid API key from https://www.themoviedb.org/settings/api');
+        }
         const response = yield axios_1.default.get(`${BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}&page=${page}`);
         return response.data;
     }
     catch (error) {
+        if (error.response && error.response.status === 401) {
+            console.error('TMDb API unauthorized access. Your API key is invalid or expired.');
+            throw new Error('TMDb API key is invalid or expired. Please update your API key.');
+        }
         console.error('Error searching movies:', error);
         throw new Error('Failed to search movies');
     }

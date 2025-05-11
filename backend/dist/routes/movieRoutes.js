@@ -40,11 +40,11 @@ const express_1 = __importDefault(require("express"));
 const movieController = __importStar(require("../controllers/movieController"));
 const router = express_1.default.Router();
 // Get popular movies
-router.get('/popular', movieController.getPopularMovies);
+router.get('/popular', (req, res) => movieController.getPopularMovies(req, res));
 // Search movies
-router.get('/search', movieController.searchMovies);
+router.get('/search', (req, res) => movieController.searchMovies(req, res));
 // Get all genres
-router.get('/genres/all', movieController.getGenres);
+router.get('/genres/all', (req, res) => movieController.getGenres(req, res));
 // Get movie details - place this after other specific routes to avoid conflicts
-router.get('/:id', movieController.getMovieDetails);
+router.get('/:id', (req, res) => movieController.getMovieDetails(req, res));
 exports.default = router;

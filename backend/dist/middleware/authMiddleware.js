@@ -22,19 +22,32 @@ const protect = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
         try {
             // Get token from header
             token = req.headers.authorization.split(' ')[1];
+            console.log('Auth token received:', token);
+            if (!process.env.JWT_SECRET) {
+                console.error('JWT_SECRET is not defined in environment variables');
+                return res.status(500).json({ message: 'Server configuration error' });
+            }
             // Verify token
             const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
+            console.log('Token decoded successfully:', decoded);
             // Get user from token
-            req.user = yield user_1.default.findById(decoded.id).select('-password');
+            const user = yield user_1.default.findById(decoded.id).select('-password');
+            if (!user) {
+                console.log('User not found with token ID:', decoded.id);
+                return res.status(401).json({ message: 'User not found' });
+            }
+            console.log('User authenticated:', user._id);
+            req.user = user;
             next();
         }
         catch (error) {
-            console.error(error);
-            res.status(401).json({ message: 'Not authorized, token failed' });
+            console.error('Token verification failed:', error);
+            return res.status(401).json({ message: 'Not authorized, token failed' });
         }
     }
-    if (!token) {
-        res.status(401).json({ message: 'Not authorized, no token' });
+    else {
+        console.log('No authorization token found in request');
+        return res.status(401).json({ message: 'Not authorized, no token' });
     }
 });
 exports.protect = protect;

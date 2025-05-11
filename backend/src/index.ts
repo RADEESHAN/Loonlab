@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import movieRoutes from './routes/movieRoutes';
 import userRoutes from './routes/userRoutes';
+import configRoutes from './routes/configRoutes';
 import connectDB from './config/db';
 
 // Load environment variables
@@ -30,6 +31,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api/movies', movieRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/config', configRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req: Request, res: Response) => {
